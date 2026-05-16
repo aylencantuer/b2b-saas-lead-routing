@@ -8,7 +8,7 @@ CREATE TYPE lead_status_enum AS ENUM ('NEW', 'CONTACTED', 'QUALIFIED', 'LOST');
 --tabla de Empresas (Companies)
 CREATE TABLE companies (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL,
+    company_name VARCHAR(50) NOT NULL UNIQUE,
     industry_category VARCHAR(50) NOT NULL,--(ex. tech, marketing, Accounting firm, etc)
     size company_size_enum --cantidad de empleados de la empresa
 );

@@ -1,0 +1,560 @@
+{
+  "name": "B2B Lead Ingest",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "605dfa6d-194c-408d-ac78-8105489ec120",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -160,
+        -128
+      ],
+      "id": "5b5b74da-4946-4c3f-acdd-69aa8f7b5b2c",
+      "name": "Webhook",
+      "webhookId": "605dfa6d-194c-408d-ac78-8105489ec120"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3e3a016d-e2eb-4203-a0db-8b3d66d7c9ef",
+              "leftValue": "={{ $json.body.work_email }}",
+              "rightValue": "gmail.com",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "1f83984a-f68a-4aae-a790-5aa61c3dfab2",
+      "name": "B2B Lead Ingest"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d1e5ee86-40cd-4e37-8992-a238d46a28db",
+              "name": "lead_score",
+              "value": 50,
+              "type": "number"
+            },
+            {
+              "id": "7e1ccb61-c581-43e1-bfb9-7c8ae9dc1dc4",
+              "name": "status",
+              "value": "NEW",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        -96
+      ],
+      "id": "5a3856c6-c6d6-4942-a095-fa1d571fdd67",
+      "name": "Asigna Score y Status"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "companies",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "industry_category": "Technology",
+            "size": "={{ $json.body.size }}",
+            "company_name": "={{ $json.body.company_name }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "industry_category",
+              "displayName": "industry_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "size",
+              "displayName": "size",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "1-10",
+                  "value": "1-10"
+                },
+                {
+                  "name": "11-50",
+                  "value": "11-50"
+                },
+                {
+                  "name": "51-200",
+                  "value": "51-200"
+                },
+                {
+                  "name": "201-500",
+                  "value": "201-500"
+                },
+                {
+                  "name": "500+",
+                  "value": "500+"
+                }
+              ],
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        624,
+        -96
+      ],
+      "id": "e4ddd1a5-7fa7-4164-aa0f-f4630227b297",
+      "name": "Insertar Empresa",
+      "credentials": {
+        "postgres": {
+          "id": "QOIGWk1eMRw9b0VF",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "leads",
+          "mode": "list",
+          "cachedResultName": "leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_score": "={{ $('Asigna Score y Status').item.json.lead_score }}",
+            "first_name": "={{ $('Asigna Score y Status').item.json.body.first_name }}",
+            "last_name": "={{ $('Asigna Score y Status').item.json.body.last_name }}",
+            "work_email": "={{ $('Asigna Score y Status').item.json.body.work_email }}",
+            "status": "={{ $('Asigna Score y Status').item.json.status }}",
+            "company_id": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "first_name",
+              "displayName": "first_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_name",
+              "displayName": "last_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "work_email",
+              "displayName": "work_email",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company_id",
+              "displayName": "company_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lead_score",
+              "displayName": "lead_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "LOST",
+                  "value": "LOST"
+                },
+                {
+                  "name": "QUALIFIED",
+                  "value": "QUALIFIED"
+                },
+                {
+                  "name": "CONTACTED",
+                  "value": "CONTACTED"
+                },
+                {
+                  "name": "NEW",
+                  "value": "NEW"
+                }
+              ]
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        832,
+        -96
+      ],
+      "id": "316eb904-aa58-45f7-9d67-ff3667408d68",
+      "name": "Insertar Lead",
+      "credentials": {
+        "postgres": {
+          "id": "QOIGWk1eMRw9b0VF",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0B3ZLM8WU8",
+          "mode": "list",
+          "cachedResultName": "avisos"
+        },
+        "text": "=🚨 ¡Nuevo Lead B2B Registrado en Supabase! 🚨 \n      Nombre: {{ $json.first_name }} {{ $json.last_name }},\n      Email de trabajo: {{ $json.work_email }},\n      Puntaje inicial: {{ $json.lead_score }},\n      Data de creacion:{{ $json.created_at }}.",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        1040,
+        -96
+      ],
+      "id": "2be53cbc-e8d0-4776-a763-16b929f75d62",
+      "name": "Send a message",
+      "webhookId": "dca25563-f918-4f52-8a94-a8578c1f0b6c",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "WXsnPUOmd00If4TT",
+          "name": "Slack OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Dos alternativas de comienzo:\nFunciona desde el nodo Webhook o desde el formulario\n\nEn caso de querer cambiar hay que modificar las configuraciones en el nodo condicional y hacer \"reset\" de las pastillas verdes...\nSi mañana tenés que hacerle una demostración en vivo a un cliente y no querés abrir la consola negra (CMD) para mandar un comando curl, simplemente desactivás el Webhook, activás el Formulario, hacés el remapeo rápido de las variables (sacándoles el .body a las pastillas) ¡y listo!",
+        "height": 112,
+        "width": 208
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -16
+      ],
+      "id": "7a5ae05b-5315-4317-90a5-6053b6f3dc2a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "formTitle": "Suscribe for FREE",
+        "formDescription": "Registro de Nuevos Leads B2B\nPor favor, complete los datos del contacto y seleccione el tamaño exacto de su empresa para que nuestro equipo pueda asesorarlo.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "fieldName": "first_name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Last Name",
+              "fieldName": "last_name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "email",
+              "fieldType": "email",
+              "fieldName": "work_email",
+              "placeholder": "email@example.com",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Size of the company",
+              "fieldType": "dropdown",
+              "fieldName": "size",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "500+"
+                  },
+                  {
+                    "option": "201-500"
+                  },
+                  {
+                    "option": "51-200"
+                  },
+                  {
+                    "option": "11-50"
+                  },
+                  {
+                    "option": "1-10"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -144,
+        80
+      ],
+      "id": "8d3922dc-e638-4c76-9a05-ee6661cdbf43",
+      "name": "Registro de Nuevos Leads B2B",
+      "webhookId": "a6862c77-3f3b-4ddf-a258-f3112e3071d9",
+      "disabled": true
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "aychu3012.app.n8n.cloud",
+            "user-agent": "curl/8.18.0",
+            "content-length": "125",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "181.116.45.168",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "AR",
+            "cf-ray": "9fad23d94f9a1e90-EZE",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "x-forwarded-for": "181.116.45.168, 198.41.233.12",
+            "x-forwarded-host": "aychu3012.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-34-68577659cb-t2q4f",
+            "x-is-trusted": "yes",
+            "x-real-ip": "181.116.45.168"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "first_name": "Melanie",
+            "last_name": "Perkins",
+            "work_email": "melanie@canva.com",
+            "company_name": "Canva",
+            "size": "500+"
+          },
+          "webhookUrl": "https://aychu3012.app.n8n.cloud/webhook/605dfa6d-194c-408d-ac78-8105489ec120",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "B2B Lead Ingest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B2B Lead Ingest": {
+      "main": [
+        [
+          {
+            "node": "Asigna Score y Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Asigna Score y Status": {
+      "main": [
+        [
+          {
+            "node": "Insertar Empresa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insertar Empresa": {
+      "main": [
+        [
+          {
+            "node": "Insertar Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insertar Lead": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registro de Nuevos Leads B2B": {
+      "main": [
+        [
+          {
+            "node": "B2B Lead Ingest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9aa0f7b0-bbc4-45f6-a02c-75aca149da47",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "12a1ca1343f4d6623f4af50c89f02694c04581a61e95dcfa7e968db1c7fffada"
+  },
+  "id": "wYHwzvPy6lvuY0TX",
+  "tags": []
+}
